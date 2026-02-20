@@ -1,0 +1,178 @@
+{
+  "name": "email assistant agent",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "f1450fcd-be4b-4b84-8310-ed750b792bcd",
+      "name": "Telegram Trigger",
+      "webhookId": "e27e9beb-d5ed-4fe8-95bb-e36c14508254"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "You are an automated email analysis and reporting agent.\nYour task is to read the full email content provided to you and generate a clear, structured report that will be directly sent as a message by another agent.\n\nFollow these rules strictly:\n• Extract the core purpose of the email in 1–2 lines.\n• List key points or decisions as short bullet points.\n• Identify action items, including responsible person and deadlines (only if explicitly mentioned).\n• Detect urgency level (Low / Medium / High).\n• Maintain a professional and neutral tone.\n• Do not add assumptions, opinions, or external knowledge.\n• Do not repeat email signatures, disclaimers, or quoted threads unless essential.\n• Output must be clean, readable, and message-ready (no markdown symbols, no extra commentary).\n\nReturn the output in exactly this format:\n\nEmail Summary:\n<concise summary>\n\nKey Points:\nAction Items:\n\nUrgency: <Low | Medium | High>"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "ccdc945b-c6d3-4a9a-ad54-51ca8bd4ca9b",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        80,
+        208
+      ],
+      "id": "ff06027a-4e0f-45f4-b118-a8fe3541792d",
+      "name": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Limit', ``, 'number') }}",
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        368,
+        208
+      ],
+      "id": "f1e819e9-f705-4c35-a838-4ddd1ccae818",
+      "name": "Get many messages in Gmail",
+      "webhookId": "9eb93e2b-d247-41c2-b635-8cbcc12a529e"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        560,
+        0
+      ],
+      "id": "192fbe04-187e-42fb-88f4-6dfed88e5ec0",
+      "name": "Send a text message",
+      "webhookId": "893e8135-6794-4dc7-8314-90811208603d"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', ``, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        608,
+        304
+      ],
+      "id": "5b8cd27a-889a-47b5-931d-a49744e46a34",
+      "name": "Send a message in Gmail",
+      "webhookId": "4641fda1-2312-480f-8888-24ec3eacd213"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many messages in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "d3151924-83f7-4833-8c24-65894b3666d0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3e571e0e6635d2782f7978c246d240e7dd7261c9cabb0f7a5f8453a0a4e5e362"
+  },
+  "id": "0hNc36ZxLFCcDupO",
+  "tags": []
+}
